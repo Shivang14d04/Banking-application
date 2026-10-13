@@ -1,0 +1,16 @@
+services:
+  postgres-db:
+    image: postgres:17-alpine
+    container_name: postgres
+    ports:
+      - 5431:5432
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+    volumes:
+      - PGDATA:/var/lib/postgresql/data
+
+volumes:
+  PGDATA:
