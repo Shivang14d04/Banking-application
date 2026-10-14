@@ -2,6 +2,9 @@ package org.shivang.banking.service;
 
 
 import lombok.RequiredArgsConstructor;
+import org.shivang.banking.Exception.AccountNotFoundException;
+import org.shivang.banking.Exception.InsufficientBalanceException;
+import org.shivang.banking.Exception.InvalidTransferException;
 import org.shivang.banking.model.Account;
 import org.shivang.banking.model.AccountStatus;
 import org.shivang.banking.repository.AccountRepo;
@@ -45,15 +48,15 @@ public class AccountService {
            return account.get();
        }
        else{
-           throw new RuntimeException("Account with id " + id + " not found");
+           throw new AccountNotFoundException("Account with id " + id + " not found");
        }
     }
 
     @Transactional
     public Account deposit(Long id, BigDecimal amount) {
         Account account = getAccountById(id);
-        if(amount.compareTo(BigDecimal.ZERO) <=0){
-            throw new RuntimeException("Amount must be greater than 0");
+        if(amount ==  null || amount.compareTo(BigDecimal.ZERO) <=0){
+            throw new InvalidTransferException("Amount must be greater than 0");
 
         }
         account.setBalance(account.getBalance().add(amount));
@@ -63,13 +66,31 @@ public class AccountService {
     @Transactional
     public Account withdraw(Long id, BigDecimal amount) {
         Account account = getAccountById(id);
-        if(amount.compareTo(BigDecimal.ZERO) <=0){
-            throw new RuntimeException("Amount must be greater than 0");
+        if(amount == null || amount.compareTo(BigDecimal.ZERO) <=0){
+            throw new InvalidTransferException("Amount must be greater than 0");
         }
         if(amount.compareTo(account.getBalance()) >0){
-            throw new RuntimeException("Amount should not b greater than current balance");
+            throw new InsufficientBalanceException("Insufficient balance");
         }
         account.setBalance(account.getBalance().subtract(amount));
         return accountRepo.save(account);
+    }
+
+    public Account getAccountByAccountNumber(String accountNumber) {
+       Optional<Account> account= accountRepo.findByAccountNumber(accountNumber);
+       if(account.isPresent()){
+           return account.get();
+       }
+       else{
+           throw new AccountNotFoundException("Account with account number " + accountNumber + " not found");
+       }
+    }
+
+    public void deleteAccount(Long id) {
+        Account account = getAccountById(id);
+        if(account == null){
+            throw new AccountNotFoundException("Account with id " + id + " not found");
+        }
+        accountRepo.delete(account);
     }
 }

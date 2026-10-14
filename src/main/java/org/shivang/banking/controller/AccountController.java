@@ -15,65 +15,44 @@ import java.math.BigDecimal;
 public class AccountController {
     private final AccountService accountService;
 
-    @PostMapping("/create")
+    @PostMapping
     public ResponseEntity<Account> createAccount(@RequestBody Account account) {
         Account createdAccount = accountService.createAccount(account);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdAccount);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/id:{id}")
     public ResponseEntity<?> getAccount(@PathVariable Long id) {
-        try {
             Account account = accountService.getAccountById(id);
             return ResponseEntity.status(HttpStatus.OK).body(account);
-        }
-        catch (RuntimeException e){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
+    }
+
+    @GetMapping("/number:{accountNumber}")
+    public ResponseEntity<?> getAccountByAccountNumber(@PathVariable String accountNumber) {
+         Account account = accountService.getAccountByAccountNumber(accountNumber);
+         return ResponseEntity.status(HttpStatus.OK).body(account);
     }
 
     @GetMapping("/{id}/balance")
     public ResponseEntity<?> getBalance(@PathVariable Long id) {
-        try {
             Account account = accountService.getAccountById(id);
             return ResponseEntity.status(HttpStatus.OK).body(account.getBalance());
-        }
-        catch (RuntimeException e){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
     }
 
     @PostMapping("/{id}/deposit")
     public ResponseEntity<?> deposit(@PathVariable Long id, @RequestBody BigDecimal amount) {
-        try{
             Account depositedaccount = accountService.deposit(id, amount);
             return ResponseEntity.status(HttpStatus.OK).body(depositedaccount);
-        }
-        catch (RuntimeException e){
-            if (e.getMessage().contains("not found")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(e.getMessage());
-            }
-            else{
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-            }
-        }
     }
 
     @PostMapping("/{id}/withdraw")
     public ResponseEntity<?> withdraw(@PathVariable Long id, @RequestBody BigDecimal amount) {
-        try{
             Account withdrawnaccount = accountService.withdraw(id, amount);
             return ResponseEntity.status(HttpStatus.OK).body(withdrawnaccount);
-        }
-        catch (RuntimeException e){
-            if (e.getMessage().contains("not found")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(e.getMessage());
-            }
-            else{
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-            }
-        }
+    }
+    @DeleteMapping("{id}")
+    public ResponseEntity<?> deleteAccount(@PathVariable Long id) {
+        accountService.deleteAccount(id);
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 }
