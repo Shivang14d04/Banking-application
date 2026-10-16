@@ -43,18 +43,14 @@ public class AccountService {
     }
 
     public Account getAccountById(Long id){
-       Optional<Account> account= accountRepo.findById(id);
-       if(account.isPresent()){
-           return account.get();
-       }
-       else{
-           throw new AccountNotFoundException("Account with id " + id + " not found");
-       }
+       return accountRepo.findById(id)
+               .orElseThrow(() -> new AccountNotFoundException("Account not found"));
     }
 
     @Transactional
     public Account deposit(Long id, BigDecimal amount) {
-        Account account = getAccountById(id);
+        Account account = accountRepo.findByIdForUpdate(id)
+                .orElseThrow(() -> new AccountNotFoundException("Account not found"));
         if(amount ==  null || amount.compareTo(BigDecimal.ZERO) <=0){
             throw new InvalidTransferException("Amount must be greater than 0");
 
@@ -65,7 +61,8 @@ public class AccountService {
 
     @Transactional
     public Account withdraw(Long id, BigDecimal amount) {
-        Account account = getAccountById(id);
+        Account account = accountRepo.findByIdForUpdate(id)
+                .orElseThrow(() -> new AccountNotFoundException("Account not found"));
         if(amount == null || amount.compareTo(BigDecimal.ZERO) <=0){
             throw new InvalidTransferException("Amount must be greater than 0");
         }
@@ -77,20 +74,14 @@ public class AccountService {
     }
 
     public Account getAccountByAccountNumber(String accountNumber) {
-       Optional<Account> account= accountRepo.findByAccountNumber(accountNumber);
-       if(account.isPresent()){
-           return account.get();
-       }
-       else{
-           throw new AccountNotFoundException("Account with account number " + accountNumber + " not found");
-       }
+        return accountRepo.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new AccountNotFoundException("Account not found"));
     }
 
     public void deleteAccount(Long id) {
-        Account account = getAccountById(id);
-        if(account == null){
-            throw new AccountNotFoundException("Account with id " + id + " not found");
-        }
+       Account account  = accountRepo.findById(id)
+               .orElseThrow(() -> new AccountNotFoundException("Account not found"));
+
         accountRepo.delete(account);
     }
 }
