@@ -9,6 +9,7 @@ import org.shivang.banking.model.Account;
 import org.shivang.banking.model.Transfer;
 import org.shivang.banking.model.TransferStatus;
 import org.shivang.banking.model.dtos.TransferRequest;
+import org.shivang.banking.model.dtos.TransferResponse;
 import org.shivang.banking.repository.AccountRepo;
 import org.shivang.banking.repository.TransferRepo;
 import org.springframework.stereotype.Service;
@@ -26,8 +27,21 @@ public class TransferService {
     private final AccountService accountService;
     private final AccountRepo accountRepo;
 
+    private TransferResponse convertToResponse(Transfer transfer) {
+        TransferResponse transferResponse = new TransferResponse(
+                transfer.getId(),
+                transfer.getFromAccount().getAccountNumber(),
+                transfer.getToAccount().getAccountNumber(),
+                transfer.getAmount(),
+                transfer.getCreatedAt(),
+                transfer.getCompletedAt(),
+                transfer.getStatus()
+        );
+        return transferResponse;
+    }
+
     @Transactional
-    public Transfer transferMoney(TransferRequest request) {
+    public TransferResponse transferMoney(TransferRequest request) {
 
         String fromNumber = request.fromAccount();
         String toNumber = request.toAccount();
@@ -97,14 +111,17 @@ public class TransferService {
         accountRepo.save(fromAccount);
         accountRepo.save(toAccount);
 
-        return transferRepo.save(transfer);
+        Transfer savedTransfer = transferRepo.save(transfer);
+        return convertToResponse(savedTransfer);
     }
 
-    public List<Transfer> getTransfersByAccount(String accountNumber) {
+    public List<TransferResponse> getTransfersByAccount(String accountNumber) {
         Account account =
                 accountService.getAccountByAccountNumber(accountNumber);
 
         return transferRepo.findByFromAccountOrToAccount(
-                account, account);
+                account, account).stream()
+                .map((transfer)-> convertToResponse(transfer))
+                .toList();
     }
 }
